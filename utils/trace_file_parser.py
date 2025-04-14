@@ -8,15 +8,15 @@ def get_pairs_from_trace_file(trace_file_path):
     """
     从指定的 ONNX Profiler 跟踪文件中解析出每个算子（Node）及其对应的 kernel 序列。
 
-    参数:
+    Args:
     trace_file_path (str): 包含 ONNX Profiler 输出的跟踪文件的路径，该文件为 JSON 格式。
 
-    返回:
+    Returns:
     list: 一个列表，列表中的每个元素是一个字典，字典包含两个字段：
           - "Node": 表示一个算子（Node）的 JSON 对象，其中包含算子的相关信息，如名称、参数大小、输入输出类型和形状等。
           - "Kernels": 一个列表，包含该算子对应的所有 kernel 的 JSON 对象，这些 kernel 是按顺序排列的，包含 kernel 的名称、运行时长、网格和块大小等信息。
 
-    异常:
+    Exceptions:
     FileNotFoundError: 如果指定的文件路径不存在，会打印错误信息。
     json.JSONDecodeError: 如果文件无法解析为有效的 JSON 格式，会打印错误信息。
     Exception: 如果发生其他未知错误，会打印相应的错误信息。
@@ -61,12 +61,12 @@ def get_node_kernel_mapping(node_kernel_pairs):
     """
     根据算子与kernel的对应关系列表，生成通过node的name找到对应的kernel序列、算子本身以及该组映射在列表中的序号（从1开始）的字典。
 
-    参数:
+    Args:
     node_kernel_pairs (list): 该列表由get_pairs_from_trace_file函数返回，列表中的每个元素是一个字典，包含两个字段：
                               - "Node": 表示一个算子（Node）的JSON对象，其中包含算子的相关信息，如名称、参数大小、输入输出类型和形状等。
                               - "Kernels": 一个列表，包含该算子对应的所有kernel的JSON对象，这些kernel是按顺序排列的，包含kernel的名称、运行时长、网格和块大小等信息。
 
-    返回:
+    Returns:
     dict: 生成的字典，键为算子（Node）的name，值为另一个字典，包含以下字段：
           - "Node": 算子本身的JSON对象，包含算子的相关信息，如名称、参数大小、输入输出类型和形状等。
           - "Kernels": 该算子对应的kernel序列，是一个包含kernel JSON对象的列表。

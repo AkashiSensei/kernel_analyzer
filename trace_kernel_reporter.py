@@ -1,6 +1,6 @@
-import json
 import argparse
 from collections import defaultdict
+from utils import trace_file_parser as tfp
 
 
 def main():
@@ -20,49 +20,18 @@ def main():
     # 用于记录每个 (op_name, provider) 有非空 kernel 序列对应的次数
     op_provider_non_empty_kernel_count = defaultdict(int)
 
-    try:
-        with open(args.input, 'r') as f:
-            data = json.load(f)
-    except FileNotFoundError:
-        print(f"Error: The file {args.input} was not found.")
-        return
-    except json.JSONDecodeError:
-        print(f"Error: The file {args.input} is not a valid JSON file.")
+    node_kernel_pairs = tfp.get_pairs_from_trace_file(args.input)
+    if node_kernel_pairs is None:
         return
 
-    current_node = None
-    current_kernels = []
+    for pair in node_kernel_pairs:
+        current_node = pair["Node"]
+        current_kernels = pair["Kernels"]
 
-    for elem in data:
-        if elem['cat'] == 'Node':
-            if current_node is not None:
-                op_name = current_node['args']['op_name']
-                provider = current_node['args']['provider']
-                node_name = current_node['name']
-                kernel_sequence = current_kernels.copy()
-
-                if args.imem:
-                    kernel_sequence = [k for k in kernel_sequence if 'memcpy' not in k.lower()]
-
-                key = (op_name, provider, tuple(kernel_sequence))
-                result[key]['count'] += 1
-                result[key]['nodes'].append(node_name)
-                op_provider_count[(op_name, provider)] += 1
-                if kernel_sequence:
-                    op_provider_non_empty_kernel_count[(op_name, provider)] += 1
-                current_kernels = []
-
-            current_node = elem
-        elif elem['cat'] == 'Kernel':
-            if current_node is not None:
-                current_kernels.append(elem['name'])
-
-    # 处理最后一个 Node
-    if current_node is not None:
         op_name = current_node['args']['op_name']
         provider = current_node['args']['provider']
         node_name = current_node['name']
-        kernel_sequence = current_kernels.copy()
+        kernel_sequence = [kernel['name'] for kernel in current_kernels]
 
         if args.imem:
             kernel_sequence = [k for k in kernel_sequence if 'memcpy' not in k.lower()]
@@ -101,7 +70,7 @@ def main():
             cuda_ops.append((op_name, provider))
         elif provider == 'CPUExecutionProvider':
             cpu_ops.append((op_name, provider))
-            
+
     if args.md:
         if cuda_ops:
             print("## 各算子出现次数统计")
