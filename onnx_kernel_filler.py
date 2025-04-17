@@ -49,19 +49,25 @@ def replace_operators_with_kernels(onnx_model, node_kernel_mapping):
     new_nodes = []
 
     for node in graph.node:
+        # 遍历所有 ONNX 图中节点
         search_name = f"{node.name}_kernel_time"
         if search_name in node_kernel_mapping:
-            kernel_info = node_kernel_mapping[search_name]
-            kernels = kernel_info["Kernels"]
+            # 有执行记录的节点（算子）
+            trace_pair = node_kernel_mapping[search_name]
+            kernels = trace_pair["Kernels"]
             if kernels:
+                # 存在对应的 kernel 序列
                 prev_outputs = None
                 for idx, kernel in enumerate(kernels):
                     kernel_name = f"{node.name}/kernel_{idx}"
+
+                    # 对于第一个 kernel，输入为原节点的输入；其余为前继 kernel 的输出
                     if idx == 0:
                         kernel_inputs = node.input
                     else:
                         kernel_inputs = prev_outputs
 
+                    # 对于最后一个 kernel，输出为原节点的输出；其余为新建一个对应的输出
                     if idx == len(kernels) - 1:
                         kernel_outputs = node.output
                     else:
@@ -82,12 +88,9 @@ def replace_operators_with_kernels(onnx_model, node_kernel_mapping):
                     prev_outputs = kernel_outputs
                 nodes_to_remove.append(node)
             else:
-                new_nodes.append(node)
-                print(f"[onnx_filler] {node.name} 无对应 kernel")
+                print(f"[onnx_filler] {node.name} 算子被执行但无对应 kernel")
         else:
-            # 没有对应的 kernel 序列，保留原节点
-            new_nodes.append(node)
-            print(f"[onnx_filler] {node.name} 未找到对应 _kernel_time")
+            print(f"[onnx_filler] {node.name} 未找到对应 _kernel_time，算子未发送至 CUDA EP")
 
     # 移除需要替换的节点
     for node in nodes_to_remove:
@@ -113,11 +116,14 @@ def add_kernels_for_operators(onnx_model, node_kernel_mapping):
     graph = onnx_model.graph
 
     for node in graph.node:
+        # 遍历图中所有算子
         search_name = f"{node.name}_kernel_time"
         if search_name in node_kernel_mapping:
-            kernel_info = node_kernel_mapping[search_name]
-            kernels = kernel_info["Kernels"]
+            # 存在执行记录的节点（算子）
+            trace_pair = node_kernel_mapping[search_name]
+            kernels = trace_pair["Kernels"]
             if kernels:
+                # 由 CUDA EP 执行并且实际发射了 kernel
                 kernel_inputs = []
                 for idx, kernel in enumerate(kernels):
                     kernel_name = f"{node.name}/kernel_{idx}"
@@ -139,12 +145,12 @@ def add_kernels_for_operators(onnx_model, node_kernel_mapping):
                 
                 node.input.append(kernel_outputs[0])
             else:
-                print(f"[onnx_filler] {node.name} 无对应 kernel")
+                print(f"[onnx_filler] {node.name} 算子被执行但无对应 kernel")
         else:
-            print(f"[onnx_filler] {node.name} 未找到对应 _kernel_time")
+            print(f"[onnx_filler] {node.name} 未找到对应 _kernel_time，算子未发送至 CUDA EP")
 
-        node.attribute.append(onnx.helper.make_attribute("index", kernel_info["Node"]["Index"]))
-        node.attribute.append(onnx.helper.make_attribute("duration", kernel_info["Node"]["dur"]))
+        node.attribute.append(onnx.helper.make_attribute("index", trace_pair["Node"]["Index"]))
+        node.attribute.append(onnx.helper.make_attribute("duration", trace_pair["Node"]["dur"]))
     
     return onnx_model
 
@@ -163,7 +169,7 @@ def main():
         args.output = f"{base_name}_kernel{ext}"
 
     onnx_model = onnx.load(args.onnx)
-    node_kernel_pairs = tfp.trace_file_parser.get_pairs_from_trace_file(args.trace)
+    node_kernel_pairs = tfp.get_pairs_from_trace_file(args.trace)
     node_kernel_mapping = tfp.get_node_kernel_mapping(node_kernel_pairs)
 
     if args.mode == "replace":
@@ -179,4 +185,9 @@ def main():
 
 
 if __name__ == "__main__":
+    """
+    Usage:
+        简单的运行：
+            python3 ./onnx_kernel_filler.py ./examples/yolov8n.onnx ./examples/yolov8n-orto0.json
+    """
     main()
