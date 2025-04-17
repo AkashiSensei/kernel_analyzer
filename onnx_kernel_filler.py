@@ -32,6 +32,46 @@ def __set_kernel_attributes(kernel_node, kernel):
     kernel_node.attribute.append(grid_z_attr)
     return kernel_node
 
+def __set_kernel_parent_attribute(kernel_node, parent_node, parent_trace_node):
+    """
+    此函数的作用是为内核节点添加父节点属性。
+
+    Args:
+        kernel_node (onnx.NodeProto): 要添加属性的 ONNX 节点。
+        parent_node (onnx.NodeProto): 父节点。
+        parent_trace_node (dict): 实测运行中包含父节点属性的对象。
+
+    Returns:
+        onnx.NodeProto: 添加属性后的内核节点。
+    """
+
+    # 从 ONNX 图中父节点获取参数
+    new_attr = onnx.helper.make_attribute("parent_name", parent_node.name)
+    kernel_node.attribute.append(new_attr)
+    for attr in parent_node.attribute:
+        attr.name = f"p_{attr.name}"
+        kernel_node.attribute.append(attr)
+
+    # 从实测运行中获取父节点属性
+    new_attr = onnx.helper.make_attribute("p_trace_duration", parent_trace_node["dur"])
+    kernel_node.attribute.append(new_attr)
+    new_attr = onnx.helper.make_attribute("p_trace_output_size", int(parent_trace_node["args"]["output_size"]))
+    kernel_node.attribute.append(new_attr)
+    new_attr = onnx.helper.make_attribute("p_trace_parameter_size", int(parent_trace_node["args"]["parameter_size"]))
+    kernel_node.attribute.append(new_attr)
+    new_attr = onnx.helper.make_attribute("p_trace_activation_size", int(parent_trace_node["args"]["activation_size"]))
+    kernel_node.attribute.append(new_attr)
+    for idx, input in enumerate(parent_trace_node["args"]["input_type_shape"]):
+        input_shape = list(input.values())[0]
+        if input_shape:
+            new_attr = onnx.helper.make_attribute(f"p_trace_input_shape_{idx}", input_shape)
+        else:
+            new_attr = onnx.helper.make_attribute(f"p_trace_input_shape_{idx}", [-1])
+            print(f"[onnx_filler] {parent_node.name} 的输入 {idx} 形状为空")
+        kernel_node.attribute.append(new_attr)
+    
+    return kernel_node
+
 def replace_operators_with_kernels(onnx_model, node_kernel_mapping):
     """
     该函数的功能是将 ONNX 模型中的操作符替换为对应的内核节点。
@@ -55,6 +95,7 @@ def replace_operators_with_kernels(onnx_model, node_kernel_mapping):
             # 有执行记录的节点（算子）
             trace_pair = node_kernel_mapping[search_name]
             kernels = trace_pair["Kernels"]
+            trace_node = trace_pair["Node"]
             if kernels:
                 # 存在对应的 kernel 序列
                 prev_outputs = None
@@ -80,9 +121,8 @@ def replace_operators_with_kernels(onnx_model, node_kernel_mapping):
                         name=kernel_name
                     )
                     
-                    parent_attr = onnx.helper.make_attribute("parent", node.name)
-                    kernel_node.attribute.append(parent_attr)
                     kernel_node = __set_kernel_attributes(kernel_node, kernel)
+                    kernel_node = __set_kernel_parent_attribute(kernel_node, node, trace_node)
                     new_nodes.append(kernel_node)
 
                     prev_outputs = kernel_outputs
@@ -122,6 +162,7 @@ def add_kernels_for_operators(onnx_model, node_kernel_mapping):
             # 存在执行记录的节点（算子）
             trace_pair = node_kernel_mapping[search_name]
             kernels = trace_pair["Kernels"]
+            trace_node = trace_pair["Node"]
             if kernels:
                 # 由 CUDA EP 执行并且实际发射了 kernel
                 kernel_inputs = []
@@ -136,9 +177,8 @@ def add_kernels_for_operators(onnx_model, node_kernel_mapping):
                         name=kernel_name
                     )
 
-                    parent_attr = onnx.helper.make_attribute("parent", node.name)
-                    kernel_node.attribute.append(parent_attr)
                     kernel_node = __set_kernel_attributes(kernel_node, kernel)
+                    kernel_node = __set_kernel_parent_attribute(kernel_node, node, trace_node)
                     graph.node.append(kernel_node)
 
                     kernel_inputs = kernel_outputs
