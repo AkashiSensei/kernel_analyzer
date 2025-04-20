@@ -1,6 +1,8 @@
+from collections import defaultdict
 import json
+import sys
 """
-该模块包含两个函数，用于解析 ONNX Profiler 跟踪文件并生成算子与 kernel 的对应关系。
+用于解析 ONNX Profiler 跟踪文件并生成算子与 kernel 的对应关系。
 仅适用于开启 GPU Profiling 的 ONNX Profiler 跟踪文件，且模型必须以默认的串行方式执行。
 """
 
@@ -51,10 +53,13 @@ def get_pairs_from_trace_file(trace_file_path):
         return node_kernel_pairs
     except FileNotFoundError:
         print(f"[trace_file_parser] 错误：文件 {trace_file_path} 未找到。")
+        sys.exit(1)
     except json.JSONDecodeError:
         print(f"[trace_file_parser] 错误：无法解析 {trace_file_path} 为有效的 JSON 文件。")
+        sys.exit(1)
     except Exception as e:
         print(f"[trace_file_parser] 发生未知错误：{e}")
+        sys.exit(1)
 
 
 def get_node_kernel_mapping(node_kernel_pairs):
@@ -79,6 +84,26 @@ def get_node_kernel_mapping(node_kernel_pairs):
             "Kernels": pair["Kernels"],
         }
     return mapping_dict
+
+def divide_pairs_by_op_name(node_kernel_pairs):
+    """
+    根据算子名称对算子与kernel的对应关系列表进行分组。
+
+    Args:
+        node_kernel_pairs (list): 该列表由get_pairs_from_trace_file函数返回，列表中的每个元素是一个字典，包含两个字段：
+                                - "Node": 表示一个算子（Node）的JSON对象，其中包含算子的相关信息，如名称、参数大小、输入输出类型和形状等。
+                                - "Kernels": 一个列表，包含该算子对应的所有kernel的JSON对象，这些kernel是按顺序排列的，包含kernel的名称、运行时长、网格和块大小等信息。
+    
+    Return:
+        dict: 生成的字典，键为算子名称，值为 pairs 的列表。
+
+    """
+    op_name_2_pairs_dict = defaultdict(list)
+    for pair in node_kernel_pairs:
+        op_name = pair["Node"]["args"]["op_name"]
+        op_name_2_pairs_dict[op_name].append(pair)
+
+    return op_name_2_pairs_dict
 
 
 if __name__ == "__main__":

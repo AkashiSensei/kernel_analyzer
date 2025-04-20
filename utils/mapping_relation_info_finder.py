@@ -1,4 +1,5 @@
 from collections import defaultdict
+import sys
 from utils import trace_file_parser as tfp
 
 def get_relationship_dict(node_kernel_pairs):
@@ -64,14 +65,14 @@ def get_pairs_from_single_relation_dict(relation_2_instance_dict, relation_tuple
     if relation_2_instance_dict is None:
         # 字典生成出现问题
         print(f"[mapping_relation_info_finder] relation_2_instance_dict is None")
-        return None
+        sys.exit(1)
     
     instance_pairs = relation_2_instance_dict[relation_tuple]["instances"]
 
     if instance_pairs is None or len(instance_pairs) == 0:
         # 没有该映射关系的实例，元组长度为 1 时，不能省略最后的逗号
         print(f"[mapping_relation_info_finder] There is no instances for {relation_tuple}")
-        return None
+        sys.exit(1)
 
     assert(len(instance_pairs) != 0)
 
