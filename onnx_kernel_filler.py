@@ -2,6 +2,7 @@ import onnx
 import argparse
 import os
 from utils import trace_file_parser as tfp
+from utils import warning_output as wo
 
 def __set_kernel_attributes(kernel_node, kernel):
     """
@@ -67,7 +68,7 @@ def __set_kernel_parent_attribute(kernel_node, parent_node, parent_trace_node):
             new_attr = onnx.helper.make_attribute(f"p_trace_input_shape_{idx}", input_shape)
         else:
             new_attr = onnx.helper.make_attribute(f"p_trace_input_shape_{idx}", [-1])
-            print(f"[onnx_filler] {parent_node.name} 的输入 {idx} 形状为空")
+            wo.simple(f"[onnx_filler] {parent_node.name} 的输入 {idx} 形状为空")
         kernel_node.attribute.append(new_attr)
     
     return kernel_node
@@ -98,6 +99,8 @@ def replace_operators_with_kernels(onnx_model, node_kernel_mapping):
             trace_node = trace_pair["Node"]
             if kernels:
                 # 存在对应的 kernel 序列
+                print(f"[onnx_filler] 找到算子 {node.name} 对应的 kernel 序列，算子编号 {trace_node["args"]["node_index"]}。")
+
                 prev_outputs = None
                 for idx, kernel in enumerate(kernels):
                     kernel_name = f"{node.name}/kernel_{idx}"
@@ -128,9 +131,9 @@ def replace_operators_with_kernels(onnx_model, node_kernel_mapping):
                     prev_outputs = kernel_outputs
                 nodes_to_remove.append(node)
             else:
-                print(f"[onnx_filler] {node.name} 算子被执行但无对应 kernel")
+                wo.simple(f"[onnx_filler] {node.name} 捕获到算子被执行但无对应 kernel，算子编号 {trace_node["args"]["node_index"]}")
         else:
-            print(f"[onnx_filler] {node.name} 未找到对应 _kernel_time，算子未发送至 CUDA EP")
+            wo.simple(f"[onnx_filler] {node.name} 未找到对应 _kernel_time")
 
     # 移除需要替换的节点
     for node in nodes_to_remove:
@@ -165,6 +168,8 @@ def add_kernels_for_operators(onnx_model, node_kernel_mapping):
             trace_node = trace_pair["Node"]
             if kernels:
                 # 由 CUDA EP 执行并且实际发射了 kernel
+                print(f"[onnx_filler] 找到算子 {node.name} 对应的 kernel 序列，算子编号 {trace_node["args"]["node_index"]}。")
+
                 kernel_inputs = []
                 for idx, kernel in enumerate(kernels):
                     kernel_name = f"{node.name}/kernel_{idx}"
@@ -185,9 +190,9 @@ def add_kernels_for_operators(onnx_model, node_kernel_mapping):
                 
                 node.input.append(kernel_outputs[0])
             else:
-                print(f"[onnx_filler] {node.name} 算子被执行但无对应 kernel")
+                wo.simple(f"[onnx_filler] {node.name} 捕获到算子被执行但无对应 kernel，算子编号 {trace_node["args"]["node_index"]}")
         else:
-            print(f"[onnx_filler] {node.name} 未找到对应 _kernel_time，算子未发送至 CUDA EP")
+            wo.simple(f"[onnx_filler] {node.name} 未找到对应 _kernel_time")
 
         node.attribute.append(onnx.helper.make_attribute("index", trace_pair["Node"]["Index"]))
         node.attribute.append(onnx.helper.make_attribute("duration", trace_pair["Node"]["dur"]))
@@ -217,8 +222,7 @@ def main():
     elif args.mode == "add":
         filled_model = add_kernels_for_operators(onnx_model, node_kernel_mapping)
     else:
-        print(f"[onnx_filler] 未知模式: {args.mode}")
-        exit(1)
+        wo.error(f"[onnx_filler] 未知模式: {args.mode}")
 
     onnx.save(filled_model, args.output)
     print(f"[onnx_filler] 成功将填充后的模型保存到 {args.output}")

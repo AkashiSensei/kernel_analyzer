@@ -3,6 +3,7 @@ import json
 import os
 from utils import trace_file_parser as tfp
 import sys
+from utils import warning_output as wout
 """
 用于生成基于规则的分析模型使用的数据，目前仅仅基于跟踪文件，目标为 kernel 序列和其 block 和 grid 数，
 后续可能考虑结合 Nsys 或者 Ncu 的数据，进行对应，让 kernel 数据更为完整和丰富。
@@ -28,8 +29,7 @@ def build_data_from_single_trace_file(trace_file_path, batch_size=1, data=None):
     op_name_2_pairs_dict = tfp.divide_pairs_by_op_name(node_kernel_pairs)
 
     if op_name_2_pairs_dict is None or len(op_name_2_pairs_dict) == 0:
-        print("[model_data_collector] No pairs found from trace file {trace_file_path}.")
-        sys.exit(1)
+        wout.error("[model_data_collector] No pairs found from trace file {trace_file_path}.")
     
     model_name = os.path.splitext(os.path.basename(trace_file_path))[0]
     print(f"[model_data_collector] Build data from trace file {trace_file_path} of model {model_name}.")
