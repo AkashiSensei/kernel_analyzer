@@ -66,7 +66,7 @@ def save_data_to_json(output_file_path, data, gpu, description, version):
     Args:
         `output_file_path` (str): 保存路径。
         `data` (dict): 要保存的数据，以算子名称为键的字典，值为列表，列表中每个元素包含目标 kernel 序列和对应的算子参数，具体包括：
-                    - "kernels": 该算子对应的 kernel 序列，是一个包含 kernel JSON 对象的列表。
+                    - "kernels": 该算子对应的 kernel 序列，是一个包含 kernel JSON 对象的列表，注意 K 是小写。
                     - "model": 模型名称。
                     - "node_name": 节点名称。
                     - "input_shape_{idx}": 各个输入形状，下标始于 0。
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     # 构建基于 yolov8n，关闭优化的数据
     data = build_data_from_single_trace_file("./examples/yolov8n-orto0.json")
     save_data_to_json(
-        "./rule_based_model/data/yolov8n-orto0.json", 
+        "./rule_based_model/data/yolov8n-orto0-origin.json", 
         data, 
         "Tesla V100-SXM2-32GB",
         "data of yolov8n.onnx with optimization off, batch size 1.", 

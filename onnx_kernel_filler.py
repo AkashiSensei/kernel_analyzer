@@ -4,7 +4,7 @@ import os
 from utils import trace_file_parser as tfp
 from utils import warning_output as wo
 
-def __set_kernel_attributes(kernel_node, kernel):
+def set_kernel_attributes(kernel_node, kernel):
     """
     此函数的作用是为内核节点添加属性。
 
@@ -33,7 +33,7 @@ def __set_kernel_attributes(kernel_node, kernel):
     kernel_node.attribute.append(grid_z_attr)
     return kernel_node
 
-def __set_kernel_parent_attribute(kernel_node, parent_node, parent_trace_node):
+def set_kernel_parent_attribute(kernel_node, parent_node, parent_trace_node):
     """
     此函数的作用是为内核节点添加父节点属性。
 
@@ -68,7 +68,7 @@ def __set_kernel_parent_attribute(kernel_node, parent_node, parent_trace_node):
             new_attr = onnx.helper.make_attribute(f"p_trace_input_shape_{idx}", input_shape)
         else:
             new_attr = onnx.helper.make_attribute(f"p_trace_input_shape_{idx}", [-1])
-            wo.simple(f"[onnx_filler] {parent_node.name} 的输入 {idx} 形状为空")
+            wo.simple(f"[onnx_filler] {parent_node.name} 的输入 {idx}： {input}形状为空")
         kernel_node.attribute.append(new_attr)
     
     return kernel_node
@@ -124,8 +124,8 @@ def replace_operators_with_kernels(onnx_model, node_kernel_mapping):
                         name=kernel_name
                     )
                     
-                    kernel_node = __set_kernel_attributes(kernel_node, kernel)
-                    kernel_node = __set_kernel_parent_attribute(kernel_node, node, trace_node)
+                    kernel_node = set_kernel_attributes(kernel_node, kernel)
+                    kernel_node = set_kernel_parent_attribute(kernel_node, node, trace_node)
                     new_nodes.append(kernel_node)
 
                     prev_outputs = kernel_outputs
@@ -182,8 +182,8 @@ def add_kernels_for_operators(onnx_model, node_kernel_mapping):
                         name=kernel_name
                     )
 
-                    kernel_node = __set_kernel_attributes(kernel_node, kernel)
-                    kernel_node = __set_kernel_parent_attribute(kernel_node, node, trace_node)
+                    kernel_node = set_kernel_attributes(kernel_node, kernel)
+                    kernel_node = set_kernel_parent_attribute(kernel_node, node, trace_node)
                     graph.node.append(kernel_node)
 
                     kernel_inputs = kernel_outputs
