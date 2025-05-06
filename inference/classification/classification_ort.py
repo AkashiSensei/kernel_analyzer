@@ -1,5 +1,6 @@
 # for resnet, vgg, mobilenet, squeezenet
 
+import argparse
 import onnx
 import numpy as np
 import onnxruntime as ort
@@ -7,10 +8,15 @@ from PIL import Image
 import cv2
 import matplotlib.pyplot as plt
 
-with open('synset.txt', 'r') as f:
+# 从参数中获取 model_path
+parser = argparse.ArgumentParser(description='Classification Inference.')
+parser.add_argument('--model', type=str, help='Path to the input ONNX file', default='./models/classification/resnet/resnet50-v1-7.onnx')
+args = parser.parse_args()
+
+with open('./inference/classification/synset.txt', 'r') as f:
     labels = [l.rstrip() for l in f]
 
-model_path = '../models/classification/resnet/resnet50-v1-12.onnx'
+model_path = args.model
 # model = onnx.load(model_path)
 
 # Start from ORT 1.10, ORT requires explicitly setting the providers parameter if you want to use execution providers
@@ -61,6 +67,6 @@ def predict(path):
     print('class=%s ; probability=%f' %(labels[a[0]],preds[a[0]]))
 
 # Enter path to the inference image below
-img_path = 'kitten.jpg'
+img_path = './inference/classification/kitten.jpg'
 predict(img_path)
 
