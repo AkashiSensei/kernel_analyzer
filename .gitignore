@@ -4,3 +4,4 @@ models/classification/
 models/detection/
 trace_files/
 results/
+rule_based_model/data/single-yolov8/

@@ -1,6 +1,7 @@
 from collections import defaultdict
 import json
 import sys
+from utils import warning_output as wout
 """
 用于解析 ONNX Profiler 跟踪文件并生成算子与 kernel 的对应关系。
 仅适用于开启 GPU Profiling 的 ONNX Profiler 跟踪文件，且模型必须以默认的串行方式执行。
@@ -30,36 +31,39 @@ def get_pairs_from_trace_file(trace_file_path):
         node_kernel_pairs = []
         current_node = None
         current_kernels = []
-        node_idx = 1
-        kernel_idx = 1
+        node_idx = 0
+        kernel_idx = 0
 
         for item in data:
             if item["cat"] == "Node":
-                node_idx += 1
                 if current_node is not None:
                     node_kernel_pairs.append({"Node": current_node, "Kernels": current_kernels})
                 current_node = item
                 current_node["Index"] = node_idx
+                node_idx += 1
                 current_kernels = []
             elif item["cat"] == "Kernel":
-                kernel_idx += 1
                 if current_node is not None:
-                    item["Index"] = kernel_idx
+                    # 判断名称中是否包含 “Memcpy”，适配 ncu 中的 ID
+                    if "Memcpy" not in item["name"]:
+                        item["Index"] = kernel_idx
+                        kernel_idx += 1
+                    else:
+                        item["Index"] = -1
                     current_kernels.append(item)
 
         if current_node is not None:
             node_kernel_pairs.append({"Node": current_node, "Kernels": current_kernels})
+        
+        print(f"[trace_file_parser] Kernel count: {kernel_idx}")
 
         return node_kernel_pairs
     except FileNotFoundError:
-        print(f"[trace_file_parser] 错误：文件 {trace_file_path} 未找到。")
-        sys.exit(1)
+        wout.error(f"[trace_file_parser] 错误：文件 {trace_file_path} 未找到。")
     except json.JSONDecodeError:
-        print(f"[trace_file_parser] 错误：无法解析 {trace_file_path} 为有效的 JSON 文件。")
-        sys.exit(1)
+        wout.error(f"[trace_file_parser] 错误：无法解析 {trace_file_path} 为有效的 JSON 文件。")
     except Exception as e:
-        print(f"[trace_file_parser] 发生未知错误：{e}")
-        sys.exit(1)
+        wout.error(f"[trace_file_parser] 发生未知错误：{e}")
 
 
 def get_node_kernel_mapping(node_kernel_pairs):
@@ -117,6 +121,7 @@ if __name__ == "__main__":
             for kernel in item["Kernels"]:
                 print(f"    {kernel['Index']}:{kernel['name']}")
             print()
+    print(parsed_result[0])
 
     # 生成映射字典并测试（yolov8n 模型的数据）
     mapping_dict = get_node_kernel_mapping(parsed_result)

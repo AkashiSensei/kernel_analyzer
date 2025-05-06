@@ -4,12 +4,17 @@ import os
 from utils import trace_file_parser as tfp
 import sys
 from utils import warning_output as wout
+from utils import pairs_ncu_integrator as pni
 """
 用于生成基于规则的分析模型使用的数据，目前仅仅基于跟踪文件，目标为 kernel 序列和其 block 和 grid 数，
 后续可能考虑结合 Nsys 或者 Ncu 的数据，进行对应，让 kernel 数据更为完整和丰富。
-版本 v1.0。
+版本 v2.0。
+
+v2.0:
+    增加了对于来自 ncu 的 csv 数据的支持。
+
 """
-def build_data_from_single_trace_file(trace_file_path, batch_size=1, data=None):
+def build_data_from_single_trace_file(trace_file_path, batch_size=1, ncu_csv_path=None, data=None):
     """
     基于传入的数据，在其之上补充来自跟踪文件的数据。
 
@@ -26,6 +31,8 @@ def build_data_from_single_trace_file(trace_file_path, batch_size=1, data=None):
             - "output_shape_{idx}": 输出形状，下标始于 0。
     """
     node_kernel_pairs = tfp.get_pairs_from_trace_file(trace_file_path)
+    if ncu_csv_path is not None:
+        node_kernel_pairs = pni.fill_pairs_with_ncu(node_kernel_pairs, ncu_csv_path)
     op_name_2_pairs_dict = tfp.divide_pairs_by_op_name(node_kernel_pairs)
 
     if op_name_2_pairs_dict is None or len(op_name_2_pairs_dict) == 0:
@@ -92,11 +99,21 @@ if __name__ == "__main__":
     """
 
     # 构建基于 yolov8n，关闭优化的数据
-    data = build_data_from_single_trace_file("./examples/yolov8n-orto0.json")
+    # data = build_data_from_single_trace_file("./examples/yolov8n-orto0.json")
+    # save_data_to_json(
+    #     "./rule_based_model/data/yolov8n-orto0-origin.json", 
+    #     data, 
+    #     "Tesla V100-SXM2-32GB",
+    #     "data of yolov8n.onnx with optimization off, batch size 1.", 
+    #     "1.0"
+    # )
+
+    # 构建基于 yolov8 不同版本的单一模型，关闭优化，包含 ncu kernel 详细分析数据的数据
+    data = build_data_from_single_trace_file("./results/trace/yolov8-orto0/yolov8x-orto0.json", ncu_csv_path="./results/ncu/ultralytics-yolov8/yolov8x-orto0-ncu-basic.csv")
     save_data_to_json(
-        "./rule_based_model/data/yolov8n-orto0-origin.json", 
+        "./rule_based_model/data/single-yolov8/yolov8x-orto0-ncu.json", 
         data, 
         "Tesla V100-SXM2-32GB",
-        "data of yolov8n.onnx with optimization off, batch size 1.", 
-        "1.0"
+        "data of yolov8x.onnx with optimization off, batch size 1, filled with basic data from ncu.", 
+        "2.0"
     )
