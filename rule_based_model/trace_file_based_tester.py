@@ -146,8 +146,15 @@ if __name__ == "__main__":
     """
     usage: python3 ./rule_based_model/trace_file_based_tester.py
     """
-    predicting_trace_file_path = "./examples/yolov8n-orto0.json"  # 作为预测对象，从中提取算子进行预测，以及正确结果作为验证
-    rule_model_data_path = "./rule_based_model/data/yolov8n-orto0-origin.json"  # 规则模型的数据
-    op_list = ["Reshape"]
+
+    # 开发时的基本测试
+    # predicting_trace_file_path = "./examples/yolov8n-orto0.json"  # 作为预测对象，从中提取算子进行预测，以及正确结果作为验证
+    # rule_model_data_path = "./rule_based_model/data/yolov8n-orto0-origin.json"  # 规则模型的数据
+    # op_list = ["Reshape"]
+
+
+    # YoloV8 不同模型的交叉测试，以来自单一模型的数据为规则库
+    predicting_trace_file_path = "./results/trace/yolov8-orto0/yolov8l-orto0.json"
+    rule_model_data_path = "./rule_based_model/data/single-yolov8/yolov8x-orto0-ncu.json"
 
     trace_file_based_test(predicting_trace_file_path, rule_model_data_path)
