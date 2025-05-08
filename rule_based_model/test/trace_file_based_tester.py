@@ -144,7 +144,7 @@ def trace_file_based_test(predicting_trace_file_path, rule_model_data_path, op_l
 
 if __name__ == "__main__":
     """
-    usage: python3 ./rule_based_model/trace_file_based_tester.py
+    usage: python3 ./rule_based_model/test/trace_file_based_tester.py
     """
 
     # 开发时的基本测试

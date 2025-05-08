@@ -3,6 +3,14 @@ from utils import trace_file_parser as tfp
 import pandas as pd
 
 def _fill_kernel_metric(kernel, id_df, metric_name):
+    """
+    填充 kernel 的 ncu 数据
+
+    Args:
+        `kernel` (dict): kernel 字典，被填充的目标数据结构
+        `id_df` (pandas.DataFrame): 包含 kernel 对应数据的数据框，来自 ncu 生成的 CSV，已根据 ID 过滤
+        `metric_name` (str): 需要填充的指标名称
+    """
     filtered_df = id_df[id_df['Metric Name'] == metric_name]
 
     # 检查结果数量
@@ -23,6 +31,24 @@ def _fill_kernel_metric(kernel, id_df, metric_name):
 
 
 def fill_pairs_with_ncu(node_kernel_pairs, ncu_csv_path):
+    """
+    使用来自 ncu 的 csv 数据填充 node_kernel_pairs 中的 kernel 数据
+
+    Args:
+        `node_kernel_pairs` (list): 节点与 kernel 对的列表，列表中的每个元素是一个字典，字典包含两个字段：
+            - "Node": 表示一个算子（Node）的 JSON 对象，其中包含算子的相关信息，如名称、参数大小、输入输出类型和形状等。
+            - "Kernels": 一个列表，包含该算子对应的所有 kernel 的 JSON 对象，这些 kernel 是按顺序排列的，包含 kernel 的名称、运行时长、网格和块大小等信息。需要包含：
+                - "Index": kernel 的索引，在分析 trace 文件时由 trace_file_parser 添加，从 0 开始，不计算 Memcpy 类型的 kernel，用于在 ncu 数据中查找对应的数据。
+        `ncu_csv_path` (str): ncu 生成的 csv 文件的路径
+    
+    Returns:
+        `node_kernel_pairs` (list): 填充了 ncu 数据的 node_kernel_pairs
+            - "Node": 表示一个算子（Node）的 JSON 对象，其中包含算子的相关信息，如名称、参数大小、输入输出类型和形状等。
+            - "Kernels": 一个列表，包含该算子对应的所有 kernel 的 JSON 对象，这些 kernel 是按顺序排列的，增加了以下内容：
+                - "ncu": 一个字典，包含该 kernel 的 ncu 数据，键为指标名称加上“Unit”或“Value”，值为具体的单位或值，例如：
+                    - "Compute (SM) Throughput Value": "61.43"
+                    - "Compute (SM) Throughput Unit": "#"
+    """
     try:
         df = pd.read_csv(ncu_csv_path)
     except FileNotFoundError:
