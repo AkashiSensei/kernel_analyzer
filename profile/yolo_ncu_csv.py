@@ -14,8 +14,12 @@ Usage:
 # result_dir = './results/ncu/ultralytics-yolov8'
 
 # Yolo11 model profile
-model_dir = './models/detection/ultralytics-yolo11'
-result_dir = './results/ncu/ultralytics-yolo11'
+# model_dir = './models/detection/ultralytics-yolo11'
+# result_dir = './results/ncu/ultralytics-yolo11'
+
+# Yolo12 model profile
+model_dir = './models/detection/ultralytics-yolo12'
+result_dir = './results/ncu/ultralytics-yolo12'
 
 os.makedirs(result_dir, exist_ok=True)
 
