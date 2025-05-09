@@ -15,64 +15,73 @@ from matplotlib.colors import Normalize, FuncNorm
 # 基于 feat: add output level to kernel_finder, enhance Concat & Split selecting when all data input count different
 # Commit ID: 62b2ec71f359e506c1afee8b81b58eb17820f5f9
 # grid size
-data = {'规则库数据来源模型': ['V8n', 'V8s', 'V8m', 'V8l', 'V8x'], 'V8n': [1.0, 0.8488302454155969, 0.7856053580734772, 0.7971969162383248, 0.7541847171623782], 'V8s': [0.7580802344826915, 1.0, 0.8171054672992265, 0.8227411856344821, 0.7532653203058741], 'V8m': [0.6272171049582637, 0.7958167824333438, 1.0, 0.7973911504867249, 0.758478231329974], 'V8l': [0.579132221720108, 0.8350830158154858, 0.8201502330889074, 1.0, 0.806329835531815], 'V8x': [0.6046700887504902, 0.6975835620577514, 0.7884082911092906, 0.807393068126864, 1.0]}
+grid_data = {'规则库数据来源模型': ['V8n', 'V8s', 'V8m', 'V8l', 'V8x'], 'V8n': [1.0, 0.8488302454155969, 0.7856053580734772, 0.7971969162383248, 0.7541847171623782], 'V8s': [0.7580802344826915, 1.0, 0.8171054672992265, 0.8227411856344821, 0.7532653203058741], 'V8m': [0.6272171049582637, 0.7958167824333438, 1.0, 0.7973911504867249, 0.758478231329974], 'V8l': [0.579132221720108, 0.8350830158154858, 0.8201502330889074, 1.0, 0.806329835531815], 'V8x': [0.6046700887504902, 0.6975835620577514, 0.7884082911092906, 0.807393068126864, 1.0]}
 # block size
-# data = {'规则库数据来源模型': ['V8n', 'V8s', 'V8m', 'V8l', 'V8x'], 'V8n': [1.0, 0.9800557880055789, 0.957391910739191, 0.9787009364415222, 0.9748837749883774], 'V8s': [0.9403068340306834, 1.0, 0.9826850156903766, 0.9728531579996014, 0.9758716875871686], 'V8m': [0.9251831454918035, 0.985729593579235, 1.0, 0.9865492657103825, 0.9841070999265772], 'V8l': [0.9307213451418309, 0.9423276857912978, 0.9915094339622641, 1.0, 0.995575022461815], 'V8x': [0.9297094938604377, 0.94240790655885, 0.9881626235399821, 0.9962488769092543, 1.0]}
+block_data = {'规则库数据来源模型': ['V8n', 'V8s', 'V8m', 'V8l', 'V8x'], 'V8n': [1.0, 0.9800557880055789, 0.957391910739191, 0.9787009364415222, 0.9748837749883774], 'V8s': [0.9403068340306834, 1.0, 0.9826850156903766, 0.9728531579996014, 0.9758716875871686], 'V8m': [0.9251831454918035, 0.985729593579235, 1.0, 0.9865492657103825, 0.9841070999265772], 'V8l': [0.9307213451418309, 0.9423276857912978, 0.9915094339622641, 1.0, 0.995575022461815], 'V8x': [0.9297094938604377, 0.94240790655885, 0.9881626235399821, 0.9962488769092543, 1.0]}
 # register size
-# data = {'规则库数据来源模型': ['V8n', 'V8s', 'V8m', 'V8l', 'V8x'], 'V8n': [1.0, 0.9784000172409859, 0.9722739541753719, 0.9782080711973552, 0.9658226538990309], 'V8s': [0.9625791261101032, 1.0, 0.9872315781742314, 0.9789810011050306, 0.9751081815873138], 'V8m': [0.9416451881332715, 0.9841645505555439, 1.0, 0.9865805166065778, 0.979105454640486], 'V8l': [0.9480771150227145, 0.9634718941798618, 0.9892648602729189, 1.0, 0.9959842742128295], 'V8x': [0.9480329303317715, 0.968525512608373, 0.985051225754251, 0.9960265527254585, 1.0]}
+register_data = {'规则库数据来源模型': ['V8n', 'V8s', 'V8m', 'V8l', 'V8x'], 'V8n': [1.0, 0.9784000172409859, 0.9722739541753719, 0.9782080711973552, 0.9658226538990309], 'V8s': [0.9625791261101032, 1.0, 0.9872315781742314, 0.9789810011050306, 0.9751081815873138], 'V8m': [0.9416451881332715, 0.9841645505555439, 1.0, 0.9865805166065778, 0.979105454640486], 'V8l': [0.9480771150227145, 0.9634718941798618, 0.9892648602729189, 1.0, 0.9959842742128295], 'V8x': [0.9480329303317715, 0.968525512608373, 0.985051225754251, 0.9960265527254585, 1.0]}
 
+
+def draw(data, output_path, start_value):
 # 创建 DataFrame
-df = pd.DataFrame(data)
-df.set_index('规则库数据来源模型', inplace=True)
+    df = pd.DataFrame(data)
+    df.set_index('规则库数据来源模型', inplace=True)
 
-# 将分数转换为百分比
-def convert_to_percentage(value):
-    return value * 100
+    # 将分数转换为百分比
+    def convert_to_percentage(value):
+        return value * 100
 
-for col in df.columns:
-    df[col] = df[col].apply(convert_to_percentage)
+    for col in df.columns:
+        df[col] = df[col].apply(convert_to_percentage)
 
-# 设置字体
-plt.rcParams['font.family'] = 'SimSun'
-# 增大字体大小
-plt.rcParams['font.size'] = 36
+    # 设置字体
+    plt.rcParams['font.family'] = 'SimSun'
+    # 增大字体大小
+    plt.rcParams['font.size'] = 36
 
-# 定义 100% 时的颜色
-max_color = '#3A0519'
+    # 定义 100% 时的颜色
+    max_color = '#4e1a43'
 
-# 创建颜色映射
-cmap = sns.light_palette(max_color, as_cmap=True)
+    # 创建颜色映射
+    cmap = sns.light_palette(max_color, as_cmap=True)
 
-# 指定最浅色对应的值
-min_value = 50
-max_value = 100
+    # 指定最浅色对应的值
+    min_value = start_value
+    max_value = 100
 
-# 创建自定义的归一化对象
-norm = Normalize(vmin=min_value, vmax=max_value)
+    # 创建自定义的归一化对象
+    norm = Normalize(vmin=min_value, vmax=max_value)
 
-# 调整图形尺寸，可根据实际情况调整
-plt.figure(figsize=(10, 8))
+    # 调整图形尺寸，可根据实际情况调整
+    plt.figure(figsize=(10, 8))
 
-# 绘制热图，同时调整注释字体大小和加粗，精细调整块之间的间距
-# 调整颜色条与图的间距
-sns.heatmap(df, annot=True, fmt=".1f", cmap=cmap, linewidths=5, annot_kws={"size": 36, "weight": "bold"},
-            cbar_kws={"pad": 0.03}, norm=norm)
+    # 绘制热图，同时调整注释字体大小和加粗，精细调整块之间的间距
+    # 调整颜色条与图的间距
+    sns.heatmap(df, annot=True, fmt=".1f", cmap=cmap, linewidths=5, annot_kws={"size": 36, "weight": "bold"},
+                cbar_kws={"pad": 0.03}, norm=norm)
 
-# 添加横轴标题，并设置加粗，调整横轴标题和标签的距离
-plt.xlabel('被预测目标模型', fontweight='bold', labelpad=15)
-# 设置纵轴标签并加粗，调整纵轴标题和标签的距离
-plt.ylabel('规则库数据来源模型', fontweight='bold', labelpad=15)
+    # 添加横轴标题，并设置加粗，调整横轴标题和标签的距离
+    plt.xlabel('被预测目标模型', fontweight='bold', labelpad=15)
+    # 设置纵轴标签并加粗，调整纵轴标题和标签的距离
+    plt.ylabel('规则库数据来源模型', fontweight='bold', labelpad=15)
 
-# 调整横轴刻度标签与图的间距
-plt.tick_params(axis='x', pad=10)
-# 调整纵轴刻度标签与图的间距
-plt.tick_params(axis='y', pad=10)
+    # 调整横轴刻度标签与图的间距
+    plt.tick_params(axis='x', pad=10)
+    # 调整纵轴刻度标签与图的间距
+    plt.tick_params(axis='y', pad=10)
 
-# 调整子图布局，为标题和坐标轴留出更多空间
-plt.subplots_adjust(left=0.15, bottom=0.16, right=1, top=0.95)
+    # 调整子图布局，为标题和坐标轴留出更多空间
+    plt.subplots_adjust(left=0.15, bottom=0.16, right=1, top=0.95)
 
-# 移除大标题
-# 保存图片，设置 dpi 提高清晰度
-plt.savefig('./plotter/output/yolov8_single_data_kernels_launch_accuracy_grid.png', dpi=100)
-plt.close()
-    
+    # 移除大标题
+    # 保存图片，设置 dpi 提高清晰度
+    plt.savefig(output_path, dpi=100)
+    plt.close()
+
+if __name__ == '__main__':
+    """
+    Usage: python3 ./plotter/yolov8_single_data_kernels_launch_accuracy.py
+    """
+    draw(grid_data, './plotter/output/yolov8_single_data_kernels_launch_accuracy_grid.png', 50)
+    draw(block_data, './plotter/output/yolov8_single_data_kernels_launch_accuracy_block.png', 92)
+    draw(register_data, './plotter/output/yolov8_single_data_kernels_launch_accuracy_register.png', 94)
