@@ -9,18 +9,21 @@ def _simple_warning_impl(message, category, filename, lineno, file=None, line=No
     if file is None:
         file = sys.stderr
     print(f"{YELLOW}{message}{ENDC}", file=file)
+    sys.stderr.flush()
 
 def _detailed_warning_impl(message, category, filename, lineno, file=None, line=None):
     if file is None:
         file = sys.stderr
     print(f"{YELLOW}{filename}: {lineno}: {category.__name__}", file=file)
     print(f"{message}{ENDC}", file=file)
+    sys.stderr.flush()
 
 def _detailed_error_impl(message, category, filename, lineno, file=None, line=None):
     if file is None:
         file = sys.stderr
     print(f"{RED}{filename}: {lineno}: {category.__name__}", file=file)
     print(f"{message}{ENDC}", file=file)
+    sys.stderr.flush()
 
 # 对外暴露的警告触发函数（只需一行调用）
 def simple(message):
