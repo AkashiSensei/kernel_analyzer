@@ -2,6 +2,20 @@ import json
 from utils import warning_output as wout
 import math
 
+# 0 - 任务基本信息
+# 1 - 严重非预期情况
+# 2 - 基本警告信息
+# 3 - 逐 kernel 信息
+# 4 - kernel 扫描详细信息
+output_value = 2
+def output(text, level): 
+    if level <= output_value:
+        print(text)
+
+def warning(text, level):
+    if level <= output_value:
+        wout.simple(text)
+
 def load_json_data(file_path):
     """
     从数据收集器保存的 Json 文件中读取数据，并返回，如果没有发现版本信息或者 data 字段，认为其并不是正确的数据，退出。
@@ -24,7 +38,7 @@ def load_json_data(file_path):
         wout.error(f"[data_based_kernel_finder] Json 文件 {file_path} 读取时出错。")
 
     if "version" in data:
-        print(f"[data_based_kernel_finder] 从文件 {file_path} 中读取数据, 版本 {data['version']}。")
+        output(f"[data_based_kernel_finder] 从文件 {file_path} 中读取数据, 版本 {data['version']}。", 0)
     else:
         wout.error(f"[data_based_kernel_finder] Json 文件 {file_path} 中未找到版本信息，退出。", 2)
     
@@ -81,10 +95,10 @@ def _shape_full_score(shape_len, totol_size_weight):
     return shape_len + totol_size_weight
 
 def _exact_output():
-    print(f"[data_based_kernel_finder]     算子精确匹配")
+    output(f"[data_based_kernel_finder]     算子精确匹配", 4)
 
 def _no_exact_output(match_score, full_score=-1):
-    wout.simple(f"[data_based_kernel_finder]     算子未精确匹配，匹配度 {match_score} / {full_score}")
+    warning(f"[data_based_kernel_finder]     算子未精确匹配，匹配度 {match_score} / {full_score}", 3)
 
 """
 寻找各个算子最为匹配的 kernel 序列。
@@ -107,11 +121,11 @@ Returns:
 """
 def empty_find_kernel(op_data_list, node_info):
     # 没有对应 kernel 的算子，直接返回空列表
-    print(f"[data_based_kernel_finder]     {node_info['op_name']} 对应 kernel 为空")
+    output(f"[data_based_kernel_finder]     {node_info['op_name']} 对应 kernel 为空", 4)
     return []
 
 def undefined_find_kernel(op_data_list, node_info):
-    wout.simple(f"[data_based_kernel_finder]     {node_info['op_name']} 算子类型未注册")
+    warning(f"[data_based_kernel_finder]     {node_info['op_name']} 算子类型未注册", 1)
     return None
 
 def conv_find_kernel(op_data_list, node_info):
@@ -120,7 +134,7 @@ def conv_find_kernel(op_data_list, node_info):
     # input_shape_2: bias
 
     if len(node_info["input_shape_1"]) != 4:
-        wout.simple(f"[data_based_kernel_finder]     Conv 算子权重 {node_info['input_shape_1']} 不是 4 维")
+        warning(f"[data_based_kernel_finder]     Conv 算子权重 {node_info['input_shape_1']} 不是 4 维", 1)
         return None
 
     test_has_bias = "input_shape_2" in node_info
@@ -159,14 +173,14 @@ def conv_find_kernel(op_data_list, node_info):
     
     _no_exact_output(max_exact_match_args_score, full_score)
 
-    print(target_data)
+    # print(target_data)
     
     # 当没有精确匹配时，调整最匹配序列的相关参数
     # 暂时先不做出调整，直接返回
 
     # 没有匹配的 kernel 序列，来源于是否有 input_2 
     if target_data == {}:
-        wout.simple("[data_based_kernel_finder]     没有匹配的 kernel 序列，来源于是否有 input_2 的差异")
+        warning("[data_based_kernel_finder]     Conv 算子没有匹配的 kernel 序列，来源于是否有 input_2 的差异", 2)
         return None
 
     return target_data["kernels"]
@@ -193,10 +207,6 @@ def concat_find_kernel(op_data_list, node_info):
     exact_match_args_score = 0
 
     for data in op_data_list:
-        # 不考虑输入数量不同的组合
-        if f"input_shape_{input_idx}" in data or f"input_shape_{input_idx - 1}" not in data:
-            continue
-
         # 区分考虑输入形状相同和不同的情况
         if input_all_same:
             # 输入形状完全一致
@@ -208,11 +218,13 @@ def concat_find_kernel(op_data_list, node_info):
             if len(data["kernels"]) == 1:
                 # 长度为 1，代表不存在内存操作，使用的是维度一致时的专用 kernel 序列
                 continue
-        
+
         exact_match_args_score = 0
-        for idx in range(input_idx):
-            exact_match_args_score += _calculate_shape_match_score(node_info[f"input_shape_{idx}"], data[f"input_shape_{idx}"], difference_punish_weight, totol_size_weight)
         exact_match_args_score += _calculate_shape_match_score(node_info["output_shape_0"], data["output_shape_0"], difference_punish_weight, totol_size_weight)
+        if f"input_shape_{input_idx}"not in data and f"input_shape_{input_idx - 1}" in data:
+            # 输入数量一致
+            for idx in range(input_idx):
+                exact_match_args_score += _calculate_shape_match_score(node_info[f"input_shape_{idx}"], data[f"input_shape_{idx}"], difference_punish_weight, totol_size_weight)
 
         if exact_match_args_score > max_exact_match_args_score:
             max_exact_match_args_score = exact_match_args_score
@@ -225,7 +237,7 @@ def concat_find_kernel(op_data_list, node_info):
     _no_exact_output(max_exact_match_args_score, full_score)
     
     if target_data == {}:
-        wout.simple(f"[data_based_kernel_finder]     Concat 算子没有满足条件的 kernel 序列")
+        warning(f"[data_based_kernel_finder]     Concat 算子没有满足条件的 kernel 序列", 2)
         return None
 
     # 当没有精确匹配时，调整最匹配序列的相关参数
@@ -252,10 +264,6 @@ def split_find_kernel(op_data_list, node_info):
     exact_match_args_score = 0
 
     for data in op_data_list:
-        # 不考虑输出数量不同的组合
-        if f"output_shape_{output_idx}" in data or f"output_shape_{output_idx - 1}" not in data:
-            continue
-
         # 区分考虑输出形状相同和不同的情况
         if output_all_same:
             # 输出形状完全一致
@@ -266,9 +274,11 @@ def split_find_kernel(op_data_list, node_info):
                 continue
 
         exact_match_args_score = 0
-        for idx in range(output_idx):
-            exact_match_args_score += _calculate_shape_match_score(node_info[f"output_shape_{idx}"], data[f"output_shape_{idx}"], difference_punish_weight, totol_size_weight)
         exact_match_args_score += _calculate_shape_match_score(node_info["input_shape_0"], data["input_shape_0"], difference_punish_weight, totol_size_weight)
+        if f"output_shape_{output_idx}"not in data and f"output_shape_{output_idx - 1}" in data:
+            # 输出数量一致
+            for idx in range(output_idx):
+                exact_match_args_score += _calculate_shape_match_score(node_info[f"output_shape_{idx}"], data[f"output_shape_{idx}"], difference_punish_weight, totol_size_weight)
 
         if exact_match_args_score > max_exact_match_args_score:
             max_exact_match_args_score = exact_match_args_score
@@ -281,7 +291,7 @@ def split_find_kernel(op_data_list, node_info):
     _no_exact_output(max_exact_match_args_score, full_score)
 
     if target_data == {}:
-        wout.simple(f"[data_based_kernel_finder]     Split 算子没有满足条件的 kernel 序列")
+        warning(f"[data_based_kernel_finder]     Split 算子没有满足条件的 kernel 序列", 2)
         return None
 
     # 当没有精确匹配时，调整最匹配序列的相关参数
@@ -292,7 +302,7 @@ def slice_find_kernel(op_data_list, node_info):
     # 目前见到的 Slice 包含 4 个输入，分别是 data, starts, ends, axes
 
     if "input_shape_3" not in node_info:
-        wout.simple(f"[data_based_kernel_finder]     Slice 算子输入数量少于预期")
+        warning(f"[data_based_kernel_finder]     Slice 算子输入数量少于预期", 1)
         return None
     
     difference_punish_weight = 1
@@ -323,16 +333,16 @@ def simple_binary_find_kernel(op_data_list, node_info):
 
     # 原始模型存在瑕疵，有 Div 节点常量形状参数未标注
     if len(node_info["input_shape_0"]) == 0:
-        wout.simple("[data_based_kernel_finder]     空的输入形状 input_0，视为 [1]")
+        warning("[data_based_kernel_finder]     基本双目运算符空的输入形状 input_0，视为 [1]", 2)
         node_info["input_shape_0"] = [1]
     if len(node_info["input_shape_1"]) == 0:
-        wout.simple("[data_based_kernel_finder]     空的输入形状 input_1，视为 [1]")
+        warning("[data_based_kernel_finder]     基本双目运算符空的输入形状 input_1，视为 [1]", 2)
         node_info["input_shape_1"] = [1]
         
 
     # 如果两个输入长度均为 1，则会被退回到 CPU 上
     if node_info["input_shape_0"] == [1] and node_info["input_shape_1"] == [1]:
-        print(f"[data_based_kernel_finder]     两输入长度均为 1，认为算子将被退回到 CPU 上执行")
+        warning(f"[data_based_kernel_finder]     基本双目运算符两输入长度均为 1，认为算子将被退回到 CPU 上执行", 3)
         return []
     
     difference_punish_weight = 1
@@ -396,7 +406,7 @@ def simple_unary_find_kernel(op_data_list, node_info):
 
 def memory_find_kernel(op_data_list, node_info):
     # 内存拷贝节点暂略，因为这不在 ONNX 算子集中，而是 ORT 处理模型后在图中生成的
-    wout.simple("[data_based_kernel_finder]     暂不支持内存拷贝节点，这并非 ONNX 算子集中节点")
+    warning("[data_based_kernel_finder]     暂不支持内存拷贝节点，这并非 ONNX 算子集中节点", 1)
     return None
 
 op_func_dict = {
@@ -445,5 +455,5 @@ def find_best_match_kernels(data, node_info):
         list: 找到的算子列表。空列表标识找到的结果就是空列表，即不真正调用 kernel；为 None 则表示异常或者没有找到。
     """
     op_name = node_info["op_name"]
-    print(f"[data_based_kernel_finder] 寻找 {node_info["op_name"]} {node_info["node_name"]} 算子匹配的 kernel 序列。")
+    output(f"[data_based_kernel_finder] 寻找 {node_info["op_name"]} {node_info["node_name"]} 算子匹配的 kernel 序列。", 3)
     return op_func_dict.get(op_name, undefined_find_kernel)(data.get(op_name), node_info)

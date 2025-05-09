@@ -11,7 +11,7 @@ from rule_based_model import data_based_kernel_finder as dbkf
 # 3 - 输出基本信息
 # 4 - 输出详细信息
 
-output_level = 0
+output_level = 2
 
 def cal_data_acc(predict_result, real_value):
     """
@@ -34,7 +34,7 @@ def output(output_text, level):
     if level <= output_level:
         print(output_text)
 
-def waring(output_text):
+def warning(output_text):
     if 2 <= output_level:
         wout.simple(output_text)
 
@@ -97,6 +97,8 @@ def GPU_performance_teste(predicting_trace_file_path, predicting_ncu_csv_path, r
         
         # 预测
         result_kernels = dbkf.find_best_match_kernels(rule_model_data, predicting_node_info)
+        if result_kernels == None:
+            warning(f"[GPU_perfermance_tester] 没有找到算子 {op_name} 对应的 kernel 序列")
 
 
         # 计算准确率
@@ -132,7 +134,7 @@ def GPU_performance_teste(predicting_trace_file_path, predicting_ncu_csv_path, r
 
 if __name__ == "__main__":
     """
-    Usage: python3 ./rule_based_model/GPU_perfermance_tester.py
+    Usage: python3 ./rule_based_model/GPU_performance_tester.py
     """
     # 测试实验
     predicting_trace_file_path="./results/trace/yolov8-orto0/yolov8l-orto0.json"

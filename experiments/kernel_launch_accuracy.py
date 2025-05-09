@@ -1,4 +1,4 @@
-from rule_based_model import GPU_perfermance_tester as gpt
+from rule_based_model import GPU_performance_tester as gpt
 
 def single_source_test():
     grid_size_table = {
