@@ -77,6 +77,7 @@ def fill_pairs_with_ncu(node_kernel_pairs, ncu_csv_path):
             _fill_kernel_metric(kernel, id_df, "Memory Throughput")
             _fill_kernel_metric(kernel, id_df, "SM Active Cycles")
             _fill_kernel_metric(kernel, id_df, "Elapsed Cycles")
+            _fill_kernel_metric(kernel, id_df, "Duration")
 
             # Launch Statistics
             _fill_kernel_metric(kernel, id_df, "Registers Per Thread")

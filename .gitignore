@@ -5,4 +5,5 @@ models/detection/
 trace_files/
 results/
 rule_based_model/data/single-yolov8/
+rule_based_model/data/multi-yolov8/
 plotter/output/

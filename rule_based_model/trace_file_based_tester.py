@@ -144,7 +144,7 @@ def trace_file_based_test(predicting_trace_file_path, rule_model_data_path, op_l
 
 if __name__ == "__main__":
     """
-    usage: python3 ./rule_based_model/test/trace_file_based_tester.py
+    usage: python3 ./rule_based_model/trace_file_based_tester.py
     """
 
     # 开发时的基本测试
@@ -154,7 +154,11 @@ if __name__ == "__main__":
 
 
     # YoloV8 不同模型的交叉测试，以来自单一模型的数据为规则库
+    # predicting_trace_file_path = "./results/trace/yolov8-orto0/yolov8l-orto0.json"
+    # rule_model_data_path = "./rule_based_model/data/single-yolov8/yolov8x-orto0-ncu.json"
+
+    # YoloV8 不同模型的交叉测试，以来自符合模型的数据为规则库
     predicting_trace_file_path = "./results/trace/yolov8-orto0/yolov8l-orto0.json"
-    rule_model_data_path = "./rule_based_model/data/single-yolov8/yolov8x-orto0-ncu.json"
+    rule_model_data_path = "./rule_based_model/data/multi-yolov8/yolov8m_l_x-orto0-ncu.json"
 
     trace_file_based_test(predicting_trace_file_path, rule_model_data_path)
