@@ -31,8 +31,11 @@ def single_source_test():
             block_size_table[f'V8{target_model_type}'].append(bs_acc)
             register_size_table[f'V8{target_model_type}'].append(r_acc)
 
+    print("grid_size_table: ")
     print(grid_size_table)
+    print("block_size_table: ")
     print(block_size_table)
+    print("register_size_table: ")
     print(register_size_table)
     
     return grid_size_table, block_size_table, register_size_table
