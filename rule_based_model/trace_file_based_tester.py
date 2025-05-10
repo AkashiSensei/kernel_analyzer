@@ -142,6 +142,8 @@ def trace_file_based_test(predicting_trace_file_path, rule_model_data_path, op_l
     print(f"精确匹配: {exact_match_node_cnt} / {total_node_cnt}")
     print(f"序列匹配: {sequence_match_node_cnt} / {total_node_cnt}")
 
+    return f"{exact_match_node_cnt}/{total_node_cnt}", f"{sequence_match_node_cnt}/{total_node_cnt}"
+
 if __name__ == "__main__":
     """
     usage: python3 ./rule_based_model/trace_file_based_tester.py
@@ -167,4 +169,4 @@ if __name__ == "__main__":
     rule_model_data_path = "./rule_based_model/data/single-yolov8/yolov8n-orto0-ncu.json"
     op_list = ['Reshape', 'Resize', 'Shape', 'Gather']
 
-    trace_file_based_test(predicting_trace_file_path, rule_model_data_path, op_list)
+    trace_file_based_test(predicting_trace_file_path, rule_model_data_path, op_list=None)
