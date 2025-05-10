@@ -158,7 +158,13 @@ if __name__ == "__main__":
     # rule_model_data_path = "./rule_based_model/data/single-yolov8/yolov8x-orto0-ncu.json"
 
     # YoloV8 不同模型的交叉测试，以来自符合模型的数据为规则库
-    predicting_trace_file_path = "./results/trace/yolov8-orto0/yolov8l-orto0.json"
-    rule_model_data_path = "./rule_based_model/data/multi-yolov8/yolov8m_l_x-orto0-ncu.json"
+    # predicting_trace_file_path = "./results/trace/yolov8-orto0/yolov8l-orto0.json"
+    # rule_model_data_path = "./rule_based_model/data/multi-yolov8/yolov8m_l_x-orto0-ncu.json"
 
-    trace_file_based_test(predicting_trace_file_path, rule_model_data_path)
+
+    # 逐算子精确度测试
+    predicting_trace_file_path = "./results/trace/yolov8-orto0/yolov8x-orto0.json"
+    rule_model_data_path = "./rule_based_model/data/single-yolov8/yolov8n-orto0-ncu.json"
+    op_list = ['Reshape', 'Resize', 'Shape', 'Gather']
+
+    trace_file_based_test(predicting_trace_file_path, rule_model_data_path, op_list)

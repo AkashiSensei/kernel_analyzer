@@ -42,7 +42,7 @@ plt.rcParams['font.family'] = 'SimSun'
 plt.rcParams['font.size'] = 28
 
 # 定义 100% 时的颜色
-max_color = '#213448'
+max_color = '#0d2d2a'
 
 # 创建颜色映射
 cmap = sns.light_palette(max_color, as_cmap=True)

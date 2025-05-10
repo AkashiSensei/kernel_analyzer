@@ -42,7 +42,11 @@ if __name__ == '__main__':
     usage: python3 ./rule_based_model/data_shape_analyzer.py
     """
     # example yolov8n
-    model_path = "./examples/yolov8n.onnx"
+    # model_path = "./examples/yolov8n.onnx"
+    # input_shape = (1, 3, 640, 640)
+
+    # yolov8x
+    model_path = "./models/detection/ultralytics-yolov8/yolov8x.onnx"
     input_shape = (1, 3, 640, 640)
 
     profile_model(model_path, input_shape, save=True)
