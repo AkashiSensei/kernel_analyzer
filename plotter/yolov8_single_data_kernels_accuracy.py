@@ -66,9 +66,9 @@ sns.heatmap(df, annot=True, fmt=".1f", cmap=cmap, linewidths=5, annot_kws={"size
             cbar_kws={"pad": 0.03}, norm=norm)
 
 # 添加横轴标题，并设置加粗，调整横轴标题和标签的距离
-plt.xlabel('被预测目标模型', fontweight='bold', labelpad=15)
+plt.xlabel('被预测目标计算图', fontweight='bold', labelpad=15)
 # 设置纵轴标签并加粗，调整纵轴标题和标签的距离
-plt.ylabel('规则库数据来源模型', fontweight='bold', labelpad=15)
+plt.ylabel('规则库数据来源计算图', fontweight='bold', labelpad=15)
 
 # 调整横轴刻度标签与图的间距
 plt.tick_params(axis='x', pad=10)

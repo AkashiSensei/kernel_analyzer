@@ -155,7 +155,7 @@ def plot_violin(data: Dict[str, List[float]],
     else:
         plt.show()
 
-def main(json_file, output_file, ylabel, xlabel="YOLO模型"):
+def main(json_file, output_file, ylabel, xlabel="YOLO计算图"):
     """
     主函数，处理用户输入并绘制小提琴图
     """
@@ -204,17 +204,17 @@ if __name__ == "__main__":
     main(
         "./results/ncu-value-extract/yolov8-grid-size.json",
         "./plotter/output/yolov8_grid_size_distribution_violinplot.png",
-        "Grid 大小",
+        "kernel Grid 大小",
     )
 
     main(
         "./results/ncu-value-extract/yolov8-block-size.json",
         "./plotter/output/yolov8_block_size_distribution_violinplot.png",
-        "Block 大小",
+        "kernel Block 大小",
     )
 
     main(
         "./results/ncu-value-extract/yolov8-registers-per-thread.json",
         "./plotter/output/yolov8_registers_per_thread_distribution_violinplot.png",
-        "每线程寄存器数",
+        "kernel 每线程寄存器数",
     )
