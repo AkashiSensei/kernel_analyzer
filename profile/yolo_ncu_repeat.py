@@ -15,21 +15,22 @@ Usage:
 # result_dir = './results/ncu/yolov8x-multi-runs'
 
 # yolov8n
-# model_path = './models/detection/ultralytics-yolov8/yolov8n.onnx'
-# result_dir = './results/ncu/yolov8n-multi-runs'
+model_path = './models/detection/ultralytics-yolov8/yolov8n.onnx'
+result_dir = './results/ncu/yolov8n-multi-runs'
 
 # yolo12x
-model_path = './models/detection/ultralytics-yolov12/yolov12x.onnx'
-result_dir = './results/ncu/yolo12x-multi-runs'
+# model_path = './models/detection/ultralytics-yolov12/yolov12x.onnx'
+# result_dir = './results/ncu/yolo12x-multi-runs'
 
 # 运行次数
-num_runs = 10
+run_start = 31
+num_runs = 20
 
 os.makedirs(result_dir, exist_ok=True)
 
 model_name = os.path.splitext(os.path.basename(model_path))[0]
 
-for run_num in range(1, num_runs + 1):
+for run_num in range(run_start, num_runs + run_start):
     result_file = os.path.join(result_dir, f'{model_name}-orto0-ncu-basic-run{run_num}.csv')
 
     print(f"发现 ONNX 模型文件: {os.path.basename(model_path)}")

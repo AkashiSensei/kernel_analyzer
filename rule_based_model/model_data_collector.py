@@ -118,15 +118,27 @@ if __name__ == "__main__":
     #     "2.0"
     # )
 
-    # 构建基于 yolov8 不同版本的符合模型，关闭优化，包含 ncu kernel 详细分析数据的数据
+    # 构建基于 yolov8 不同版本的符合模型，关闭优化，包含 ncu kernel 详细分析数据的数据，用于 kernel 预测准确率分析
     # 具体包括 n_s s_l l_x m_l_x
-    data = build_data_from_single_trace_file("./results/trace/yolov8-orto0/yolov8m-orto0.json", ncu_csv_path="./results/ncu/ultralytics-yolov8/yolov8m-orto0-ncu-basic.csv")
-    data = build_data_from_single_trace_file("./results/trace/yolov8-orto0/yolov8l-orto0.json", ncu_csv_path="./results/ncu/ultralytics-yolov8/yolov8l-orto0-ncu-basic.csv", data=data)
-    data = build_data_from_single_trace_file("./results/trace/yolov8-orto0/yolov8x-orto0.json", ncu_csv_path="./results/ncu/ultralytics-yolov8/yolov8x-orto0-ncu-basic.csv", data=data)
+    # data = build_data_from_single_trace_file("./results/trace/yolov8-orto0/yolov8m-orto0.json", ncu_csv_path="./results/ncu/ultralytics-yolov8/yolov8m-orto0-ncu-basic.csv")
+    # data = build_data_from_single_trace_file("./results/trace/yolov8-orto0/yolov8l-orto0.json", ncu_csv_path="./results/ncu/ultralytics-yolov8/yolov8l-orto0-ncu-basic.csv", data=data)
+    # data = build_data_from_single_trace_file("./results/trace/yolov8-orto0/yolov8x-orto0.json", ncu_csv_path="./results/ncu/ultralytics-yolov8/yolov8x-orto0-ncu-basic.csv", data=data)
+    # save_data_to_json(
+    #     "./rule_based_model/data/multi-yolov8/yolov8m_l_x-orto0-ncu.json", 
+    #     data, 
+    #     "Tesla V100-SXM2-32GB",
+    #     "data of yolov8m, yolov8l & yolov8x with optimization off, batch size 1, filled with basic data from ncu.", 
+    #     "2.0"
+    # )
+
+    # 构建基于 yolov8 不同版本的符合模型，关闭优化，包含 ncu kernel 详细分析数据的数据，用于 kernel 启动数据预测准确率分析
+    # 具体包括 n_m n_x m_x ，测试其在另外两个模型上的表现
+    data = build_data_from_single_trace_file("./results/trace/yolov8-orto0/yolov8n-orto0.json", ncu_csv_path="./results/ncu/ultralytics-yolov8/yolov8n-orto0-ncu-basic.csv")
+    data = build_data_from_single_trace_file("./results/trace/yolov8-orto0/yolov8m-orto0.json", ncu_csv_path="./results/ncu/ultralytics-yolov8/yolov8m-orto0-ncu-basic.csv", data=data)
     save_data_to_json(
-        "./rule_based_model/data/multi-yolov8/yolov8m_l_x-orto0-ncu.json", 
+        "./rule_based_model/data/multi-yolov8/yolov8n_m-orto0-ncu.json", 
         data, 
         "Tesla V100-SXM2-32GB",
-        "data of yolov8m, yolov8l & yolov8x with optimization off, batch size 1, filled with basic data from ncu.", 
+        "data of yolov8n & yolov8m with optimization off, batch size 1, filled with basic data from ncu.", 
         "2.0"
     )
