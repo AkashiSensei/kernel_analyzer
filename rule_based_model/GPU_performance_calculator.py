@@ -28,3 +28,26 @@ def get_op_metric_sum(kernels, cal_func):
     if kernels is None or len(kernels) == 0:
         return 0
     return sum(cal_func(kernel) for kernel in kernels)
+
+def get_kernel_compute_throughput(kernel):
+    if "Memcpy" in kernel["name"]:
+        return 0
+    
+    return float(kernel["ncu"]["Compute (SM) Throughput Value"])
+
+def get_kernel_memory_throughput(kernel):
+    if "Memcpy" in kernel["name"]:
+        return 0
+    
+    return float(kernel["ncu"]["Memory Throughput Value"])
+
+def get_kernel_sm_active_cycles(kernel):
+    if "Memcpy" in kernel["name"]:
+        return 0
+    
+    return float(kernel["ncu"]["SM Active Cycles Value"])
+
+def get_op_metric_average(kernels, cal_func): 
+    if kernels is None or len(kernels) == 0:
+        return 0
+    return sum(cal_func(kernel) for kernel in kernels) / len(kernels)

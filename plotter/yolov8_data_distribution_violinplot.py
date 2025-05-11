@@ -50,11 +50,12 @@ def plot_violin(data: Dict[str, List[float]],
                 output_path: Optional[str] = None,
                 xlabel: str = "数据来源",
                 ylabel: str = "数值",
-                figsize: tuple = (10, 8),
-                violin_color_list: Optional[List[str]] = None,  # 小提琴图颜色列表
-                scatter_color_list: Optional[List[str]] = None,  # 散点图颜色列表
+                figsize: tuple = (10, 10),
+                violin_color_list: Optional[List[str]] = None,
+                scatter_color_list: Optional[List[str]] = None,
                 show_points: bool = True,
-                show_boxplot: bool = True) -> None:
+                show_boxplot: bool = True,
+                y_lim: Optional[tuple] = None) -> None:  # 新增参数，用于指定y轴范围
     """
     绘制小提琴图（支持独立的小提琴图和散点图颜色配置）
     """
@@ -70,7 +71,7 @@ def plot_violin(data: Dict[str, List[float]],
     violin_width = 0.5  # 小提琴图宽度（0-1之间）
     violin_spacing = 0.6  # 小提琴图间距系数（值越大间距越大）
     violin_alpha = 0.5  # 小提琴图颜色透明度（0-1之间，越小越淡）
-    scatter_alpha = 0.4  # 散点图颜色透明度（0-1之间）
+    scatter_alpha = 0.8  # 散点图颜色透明度（0-1之间）
     
     # 计算每个小提琴图的位置
     positions = np.arange(1, len(values) + 1) * violin_spacing
@@ -109,13 +110,13 @@ def plot_violin(data: Dict[str, List[float]],
     if show_points:
         if scatter_color_list:
             for i, (label, vals) in enumerate(zip(labels, values)):
-                x = positions[i] + violin_width * 0.3 * (2 * (np.random.rand(len(vals)) - 0.5))
+                x = positions[i] + violin_width * 0.4 * (2 * (np.random.rand(len(vals)) - 0.5))
                 scatter_color = scatter_color_list[i % len(scatter_color_list)]
                 plt.scatter(x, vals, s=15, color=scatter_color, alpha=scatter_alpha)
         else:
             # 如果没有提供散点颜色列表，默认使用小提琴图颜色
             for i, (label, vals) in enumerate(zip(labels, values)):
-                x = positions[i] + violin_width * 0.3 * (2 * (np.random.rand(len(vals)) - 0.5))
+                x = positions[i] + violin_width * 0.4 * (2 * (np.random.rand(len(vals)) - 0.5))
                 color = violin_color_list[i % len(violin_color_list)] if violin_color_list else 'black'
                 plt.scatter(x, vals, s=50, color=color, alpha=scatter_alpha)
     
@@ -140,7 +141,10 @@ def plot_violin(data: Dict[str, List[float]],
         right=0.95,
         top=0.95
     )
-    # ===== 可调整参数区域结束 =====
+    
+    # ===== 新增：设置y轴范围 =====
+    if y_lim is not None:
+        plt.ylim(y_lim)  # 设置指定的y轴范围
     
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     plt.tight_layout()
@@ -155,26 +159,29 @@ def plot_violin(data: Dict[str, List[float]],
     else:
         plt.show()
 
-def main(json_file, output_file, ylabel, xlabel="YOLO计算图"):
+def main(json_file, output_file, ylabel, xlabel="YOLO计算图", y_lim=None):
     """
     主函数，处理用户输入并绘制小提琴图
     """
 
     # 自定义颜色列表 - 程序会按顺序循环使用这些颜色
-    violin_color_list = [
-        "#9c4f9f",
-        "#9c4f9f",
-        "#9c4f9f",
-        "#9c4f9f",
-        "#9c4f9f",
-    ]
-    scatter_color_list = [
-        "#4e1a43",
-        "#4e1a43",
-        "#4e1a43",
-        "#4e1a43",
-        "#4e1a43",
-    ]
+    # violin_color_list = [
+    #     "#9c4f9f",
+    #     "#9c4f9f",
+    #     "#9c4f9f",
+    #     "#9c4f9f",
+    #     "#9c4f9f",
+    # ]
+    # scatter_color_list = [
+    #     "#4e1a43",
+    #     "#4e1a43",
+    #     "#4e1a43",
+    #     "#4e1a43",
+    #     "#4e1a43",
+    # ]
+
+    violin_color_list = ["#e68b6f"] * 5
+    scatter_color_list = ["#5c1011"] * 5
     
     data = read_json_data(json_file)
     if not data:
@@ -194,27 +201,56 @@ def main(json_file, output_file, ylabel, xlabel="YOLO计算图"):
         xlabel=xlabel,
         ylabel=ylabel,
         violin_color_list=violin_color_list,
-        scatter_color_list=scatter_color_list
+        scatter_color_list=scatter_color_list,
+        y_lim=y_lim
     )
 
 if __name__ == "__main__":
     """
     Usage: python3 ./plotter/yolov8_data_distribution_violinplot.py
     """
+    # kernel 启动数据分布
+    # main(
+    #     "./results/ncu-value-extract/yolov8-grid-size.json",
+    #     "./plotter/output/yolov8_grid_size_distribution_violinplot.png",
+    #     "kernel Grid 大小",
+    # )
+
+    # main(
+    #     "./results/ncu-value-extract/yolov8-block-size.json",
+    #     "./plotter/output/yolov8_block_size_distribution_violinplot.png",
+    #     "kernel Block 大小",
+    # )
+
+    # main(
+    #     "./results/ncu-value-extract/yolov8-registers-per-thread.json",
+    #     "./plotter/output/yolov8_registers_per_thread_distribution_violinplot.png",
+    #     "kernel 每线程寄存器数",
+    # )
+
+
+    # kernel 运行时数据分布
     main(
-        "./results/ncu-value-extract/yolov8-grid-size.json",
-        "./plotter/output/yolov8_grid_size_distribution_violinplot.png",
-        "kernel Grid 大小",
+        "./results/ncu-value-extract/yolov8-compute-sm-throughput.json",
+        "./plotter/output/yolov8_compute_throughput_distribution_violinplot.png",
+        "计算吞吐利用率（%）",
     )
 
     main(
-        "./results/ncu-value-extract/yolov8-block-size.json",
-        "./plotter/output/yolov8_block_size_distribution_violinplot.png",
-        "kernel Block 大小",
+        "./results/ncu-value-extract/yolov8-memory-throughput.json",
+        "./plotter/output/yolov8_memory_throughput_distribution_violinplot.png",
+        "存储吞吐利用率（%）",
     )
 
     main(
-        "./results/ncu-value-extract/yolov8-registers-per-thread.json",
-        "./plotter/output/yolov8_registers_per_thread_distribution_violinplot.png",
-        "kernel 每线程寄存器数",
+        "./results/ncu-value-extract/yolov8-sm-active-cycles.json",
+        "./plotter/output/yolov8_sm_active_cycles_distribution_violinplot.png",
+        "SM 活跃周期数（1e6）",
+    )
+
+    main(
+        "./results/ncu-value-extract/yolov8-sm-active-cycles.json",
+        "./plotter/output/yolov8_sm_active_cycles_distribution_violinplot_limit.png",
+        "SM 活跃周期数",
+        y_lim=(0, 50000)
     )

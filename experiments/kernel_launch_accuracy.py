@@ -1,4 +1,4 @@
-from rule_based_model import GPU_performance_tester as gpt
+from rule_based_model import kernel_launch_metric_tester as klmt
 
 def single_source_test():
     grid_size_table = {
@@ -25,7 +25,7 @@ def single_source_test():
             predicting_ncu_csv_path = f"./results/ncu/ultralytics-yolov8/yolov8{target_model_type}-orto0-ncu-basic.csv"
             rule_model_data_path = f"./rule_based_model/data/single-yolov8/yolov8{source_model_type}-orto0-ncu.json"
 
-            gs_acc, bs_acc, r_acc = gpt.GPU_performance_teste(predicting_trace_file_path, predicting_ncu_csv_path, rule_model_data_path)
+            gs_acc, bs_acc, r_acc = klmt.GPU_performance_teste(predicting_trace_file_path, predicting_ncu_csv_path, rule_model_data_path)
 
             grid_size_table[f'V8{target_model_type}'].append(gs_acc)
             block_size_table[f'V8{target_model_type}'].append(bs_acc)
@@ -76,7 +76,7 @@ def multi_source_test():
             else:
                 rule_model_data_path = f"./rule_based_model/data/multi-yolov8/yolov8{source_model_type}-orto0-ncu.json"
 
-            gs_acc, bs_acc, r_acc = gpt.GPU_performance_teste(predicting_trace_file_path, predicting_ncu_csv_path, rule_model_data_path)
+            gs_acc, bs_acc, r_acc = klmt.GPU_performance_teste(predicting_trace_file_path, predicting_ncu_csv_path, rule_model_data_path)
 
             grid_size_table[f'V8{target_model_type}'].append(gs_acc)
             block_size_table[f'V8{target_model_type}'].append(bs_acc)

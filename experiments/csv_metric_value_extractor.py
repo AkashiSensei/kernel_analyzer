@@ -131,7 +131,19 @@ if __name__ == "__main__":
 
 
     # YOLOV8 模型上的 Grid Size、Block Size、Registers Per Thread
-    METRIC_NAME = "Registers Per Thread"  # 要提取的指标名称
+    # METRIC_NAME = "Registers Per Thread"  # 要提取的指标名称
+    # MODEL_IDENTIFIERS = ["n", "s", "m", "l", "x"]
+    # FILE_CONFIGS = [
+    #     {
+    #         "file_path": f"./results/ncu/ultralytics-yolov8/yolov8{identifier}-orto0-ncu-basic.csv",
+    #         "column_name": f"V8{identifier}"
+    #     } for identifier in MODEL_IDENTIFIERS
+    # ]
+    # OUTPUT_PATH = "results/ncu-value-extract/yolov8-registers-per-thread.json"  # 输出文件路径（修改为.json以使用JSON格式）
+
+
+    # YOLOV8 模型上的 Compute (SM) Throughput、Memory Throughput、SM Active Cycles
+    METRIC_NAME = "SM Active Cycles"  # 要提取的指标名称
     MODEL_IDENTIFIERS = ["n", "s", "m", "l", "x"]
     FILE_CONFIGS = [
         {
@@ -139,9 +151,7 @@ if __name__ == "__main__":
             "column_name": f"V8{identifier}"
         } for identifier in MODEL_IDENTIFIERS
     ]
-    OUTPUT_PATH = "results/ncu-value-extract/yolov8-registers-per-thread.json"  # 输出文件路径（修改为.json以使用JSON格式）
-
-
+    OUTPUT_PATH = "results/ncu-value-extract/yolov8-sm-active-cycles.json"  # 输出文件路径（修改为.json以使用JSON格式）
 
 
 

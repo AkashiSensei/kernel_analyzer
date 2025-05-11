@@ -52,9 +52,9 @@ def GPU_performance_teste(predicting_trace_file_path, predicting_ncu_csv_path, r
     rule_model_data = dbkf.load_json_data(rule_model_data_path)
 
     # 输出相关信息
-    output(f"[GPU_perfermance_tester] 待测跟踪文件路径：{predicting_trace_file_path}", 3)
-    output(f"[GPU_perfermance_tester] 待测 NCU 文件路径：{predicting_ncu_csv_path}", 3)
-    output(f"[GPU_perfermance_tester] 规则模型数据文件路径：{rule_model_data_path}", 3)
+    output(f"[kernel_execute_metric_tester] 待测跟踪文件路径：{predicting_trace_file_path}", 3)
+    output(f"[kernel_execute_metric_tester] 待测 NCU 文件路径：{predicting_ncu_csv_path}", 3)
+    output(f"[kernel_execute_metric_tester] 规则模型数据文件路径：{rule_model_data_path}", 3)
 
 
 
@@ -62,9 +62,9 @@ def GPU_performance_teste(predicting_trace_file_path, predicting_ncu_csv_path, r
     # 通用
     operators_count = 0
     # kernel 启动信息
-    grid_size_acc_sum = 0.0
-    block_size_acc_sum = 0.0
-    register_per_thread_acc_sum = 0.0
+    compute_throughput_acc_sum = 0.0
+    memory_throughput_acc_sum = 0.0
+    sm_active_cycles_acc_sum = 0.0
 
 
     # 以算子为单位进行指标计算
@@ -90,7 +90,7 @@ def GPU_performance_teste(predicting_trace_file_path, predicting_ncu_csv_path, r
             output_shape = list(output_type_shape.values())[0]
             predicting_node_info[f"output_shape_{idx}"] = output_shape
     
-        output(f"[GPU_perfermance_tester] 找到 {op_name} 算子：{node_name} ，开始预测", 3)
+        output(f"[kernel_execute_metric_tester] 找到 {op_name} 算子：{node_name} ，开始预测", 3)
         for key, value in predicting_node_info.items():
             output(f"{key.ljust(25)}: {value}", 4)
 
@@ -98,43 +98,43 @@ def GPU_performance_teste(predicting_trace_file_path, predicting_ncu_csv_path, r
         # 预测
         result_kernels = dbkf.find_best_match_kernels(rule_model_data, predicting_node_info)
         if result_kernels == None:
-            warning(f"[GPU_perfermance_tester] 没有找到算子 {op_name} 对应的 kernel 序列")
+            warning(f"[kernel_execute_metric_tester] 没有找到算子 {op_name} 对应的 kernel 序列")
 
 
         # 计算准确率
         operators_count += 1
-        grid_size_acc = cal_data_acc(
-            gpc.get_op_metric_sum(result_kernels, gpc.get_kernel_grid_size),
-            gpc.get_op_metric_sum(real_kernels, gpc.get_kernel_grid_size),
+        compute_throughput_acc = cal_data_acc(
+            gpc.get_op_metric_average(result_kernels, gpc.get_kernel_compute_throughput),
+            gpc.get_op_metric_average(real_kernels, gpc.get_kernel_compute_throughput),
         )
-        grid_size_acc_sum += grid_size_acc
-        block_size_acc = cal_data_acc(
-            gpc.get_op_metric_sum(result_kernels, gpc.get_kernel_block_size),
-            gpc.get_op_metric_sum(real_kernels, gpc.get_kernel_block_size),
+        compute_throughput_acc_sum += compute_throughput_acc
+        memory_throughput_acc = cal_data_acc(
+            gpc.get_op_metric_average(result_kernels, gpc.get_kernel_memory_throughput),
+            gpc.get_op_metric_average(real_kernels, gpc.get_kernel_memory_throughput),
         )
-        block_size_acc_sum += block_size_acc
-        register_per_thread_acc = cal_data_acc(
-            gpc.get_op_metric_sum(result_kernels, gpc.get_kernel_register_per_thread),
-            gpc.get_op_metric_sum(real_kernels, gpc.get_kernel_register_per_thread),
+        memory_throughput_acc_sum += memory_throughput_acc
+        sm_active_cycles_acc = cal_data_acc(
+            gpc.get_op_metric_sum(result_kernels, gpc.get_kernel_sm_active_cycles),
+            gpc.get_op_metric_sum(real_kernels, gpc.get_kernel_sm_active_cycles),
         )
-        register_per_thread_acc_sum += register_per_thread_acc
+        sm_active_cycles_acc_sum += sm_active_cycles_acc
         output("该算子参数准确率如下：", 4)
-        output(f"grid_size_acc: {grid_size_acc}", 4)
-        output(f"block_size_acc: {block_size_acc}", 4)
-        output(f"register_per_thread_acc: {register_per_thread_acc}", 4)
+        output(f"compute_throughput_acc: {compute_throughput_acc}", 4)
+        output(f"memory_throughput_acc: {memory_throughput_acc}", 4)
+        output(f"sm_active_cycles_acc: {sm_active_cycles_acc}", 4)
 
     # 输出整体准确率
     output("整体参数准确率如下：", 0)
-    output(f"grid_size_acc: {grid_size_acc_sum / operators_count}", 0)
-    output(f"block_size_acc: {block_size_acc_sum / operators_count}", 0)
-    output(f"register_per_thread_acc: {register_per_thread_acc_sum / operators_count}", 0)
+    output(f"compute_throughput_acc: {compute_throughput_acc_sum / operators_count}", 0)
+    output(f"memory_throughput_acc: {memory_throughput_acc_sum / operators_count}", 0)
+    output(f"sm_active_cycles_acc: {sm_active_cycles_acc_sum / operators_count}", 0)
 
-    return grid_size_acc_sum / operators_count, block_size_acc_sum / operators_count, register_per_thread_acc_sum / operators_count
+    return compute_throughput_acc_sum / operators_count, memory_throughput_acc_sum / operators_count, sm_active_cycles_acc_sum / operators_count
 
 
 if __name__ == "__main__":
     """
-    Usage: python3 ./rule_based_model/GPU_performance_tester.py
+    Usage: python3 ./rule_based_model/kernel_execute_metric_tester.py
     """
     # 测试实验
     predicting_trace_file_path="./results/trace/yolov8-orto0/yolov8l-orto0.json"
