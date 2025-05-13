@@ -85,7 +85,7 @@ def plot_violin(data: Dict[str, List[float]],
         for i, pc in enumerate(violin_parts['bodies']):
             violin_color = violin_color_list[i % len(violin_color_list)]
             pc.set_facecolor(violin_color)
-            pc.set_edgecolor('black')
+            pc.set_edgecolor('white')
             pc.set_alpha(violin_alpha)
     else:
         for pc in violin_parts['bodies']:
