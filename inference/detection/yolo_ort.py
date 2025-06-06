@@ -218,7 +218,7 @@ class YOLOv8:
 
 if __name__ == "__main__":
     """
-    usage: python3 ./inference/detection/yolo_ort.py --model ./models/detection/ultralytics-yolov8/yolov8s.onnx --img ./inference/detection/bus.jpg
+    usage: python3 ./inference/detection/yolo_ort.py --model ./models/detection/ultralytics-yolov8/yolov8n.onnx --img ./inference/detection/bus.jpg
     """
 
     # Create an argument parser to handle command-line arguments

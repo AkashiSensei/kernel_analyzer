@@ -171,5 +171,8 @@ def main():
 
 
 if __name__ == "__main__":
+    """
+    usage: python3 ./experiments/trace_kernel_reporter.py --input ./examples/yolov8n-orto0.json --md
+    """
     main()
     
